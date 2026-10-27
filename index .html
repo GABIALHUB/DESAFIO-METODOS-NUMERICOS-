@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Integración Numérica — Ejercicios 19 al 27</title>
+<style>
+:root{--bg:#f3f6fb;--card:#fff;--ink:#172033;--muted:#64748b;--blue:#2457d6;--blue2:#eaf0ff;--line:#dce4f0;--green:#087f5b;--red:#b42318;--shadow:0 8px 28px #182b4b12}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(125deg,#152b54,#2457d6);color:white;padding:30px 20px}header .wrap,main{max-width:1180px;margin:auto}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.15;margin:0 0 10px}header p{margin:0;color:#e1eaff;max-width:800px}
+main{padding:22px 16px 50px}.notice{padding:13px 15px;border-left:4px solid #e0a000;background:#fff8df;border-radius:8px;margin-bottom:18px}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+h2{font-size:1.18rem;margin:0 0 12px}h3{font-size:1rem;margin:18px 0 7px}.muted{color:var(--muted)}label{display:block;font-weight:650;font-size:.9rem;margin:10px 0 5px}
+input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cbd5e1;border-radius:8px;background:white;color:var(--ink)}textarea{min-height:105px;resize:vertical}
+button{border:0;border-radius:9px;padding:10px 13px;cursor:pointer;font-weight:700}.primary{background:var(--blue);color:#fff}.secondary{background:var(--blue2);color:#173e9e}.plain{background:#eef2f7;color:#25334a}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.exercise-list{display:grid;gap:7px}.exercise-btn{text-align:left;background:#f7f9fd;border:1px solid var(--line);color:var(--ink);font-weight:600}.exercise-btn.active{background:var(--blue2);border-color:var(--blue);color:#173e9e}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.small{font-size:.86rem}.pill{display:inline-block;background:#eef2ff;color:#2448a5;border-radius:99px;padding:3px 9px;font-size:.78rem;font-weight:700}
+.result-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.metric{background:#f7f9fd;border:1px solid var(--line);border-radius:10px;padding:12px}.metric .val{font-size:1.12rem;font-weight:800;overflow-wrap:anywhere}.metric .name{font-size:.82rem;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:8px 0 14px}th,td{border:1px solid var(--line);padding:7px 9px;text-align:right}th{background:#f0f4fb;font-weight:750}th:first-child,td:first-child{text-align:left}
+.step{border-left:3px solid #9bb6ff;padding:7px 0 7px 12px;margin:9px 0}.formula{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#f4f7fc;border-radius:7px;padding:9px 11px;overflow-wrap:anywhere;display:block;margin:7px 0}
+canvas{width:100%;height:310px;border:1px solid var(--line);border-radius:10px;background:#fff;display:block}.error{color:var(--red);font-weight:650}.ok{color:var(--green);font-weight:650}.hidden{display:none}.footer{color:var(--muted);font-size:.83rem;margin-top:20px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.result-grid{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Laboratorio de Integración Numérica</h1>
+<p>Ejercicios 19 al 27 · Métodos del trapecio compuesto, Simpson 1/3 y Simpson 3/8. Ingresa o modifica datos, observa el gráfico y revisa el procedimiento paso a paso.</p>
+</div></header>
+<main>
+<div class="notice"><b>Importante:</b> los valores iniciales de los ejercicios adaptados se cargan desde el documento <i>Desafío de Métodos Numéricos</i>. Puedes cambiarlos. Para coincidir con ese solucionario, conserva los datos precargados y revisa las notas sobre los ejercicios 21, 26 y las combinaciones de Simpson.</div>
+<div class="layout">
+<aside>
+<section class="card">
+<h2>1. Selecciona un ejercicio</h2>
+<div id="exerciseList" class="exercise-list"></div>
+</section>
+<section class="card">
+<h2>2. Configuración</h2>
+<label for="method">Método principal</label>
+<select id="method">
+<option value="all">Comparar todos los métodos disponibles</option>
+<option value="trap">Trapecio compuesto</option>
+<option value="s13">Simpson 1/3</option>
+<option value="s38">Simpson 3/8</option>
+<option value="combo">Simpson combinado (si corresponde)</option>
+</select>
+<label for="digits">Decimales mostrados</label><select id="digits"><option>6</option><option>8</option><option>10</option></select>
+<div class="actions"><button class="primary" id="calculate">Calcular y explicar</button><button class="secondary" id="reset">Restaurar datos</button></div>
+<p class="small muted">Los métodos de Simpson requieren nodos igualmente espaciados: 1/3 exige n par y 3/8 exige n múltiplo de 3. El método combinado se usa cuando el número de subintervalos lo permite.</p>
+</section>
+</aside>
+<div>
+<section class="card">
+<span class="pill" id="tag">Ejercicio 19</span>
+<h2 id="title">Distancia recorrida por un vehículo</h2>
+<p id="description" class="muted"></p>
+<div id="model" class="formula"></div>
+<div class="grid2">
+<div><label for="xs">Valores de x (separados por comas)</label><textarea id="xs"></textarea></div>
+<div><label for="ys">Valores de f(x) o y (separados por comas)</label><textarea id="ys"></textarea></div>
+</div>
+<div id="functionInputs" class="grid3 hidden">
+<div><label for="fx">Función f(x)</label><input id="fx" placeholder="Ej.: x*x"></div>
+<div><label for="a">Límite inferior a</label><input id="a" type="number" step="any"></div>
+<div><label for="b">Límite superior b</label><input id="b" type="number" step="any"></div>
+<div><label for="n">Subintervalos n</label><input id="n" type="number" min="1" step="1" value="8"></div>
+<div><label for="unit">Unidad del resultado</label><input id="unit" placeholder="u², J, ft, etc."></div>
+</div>
+<label for="unitData">Unidad del resultado / nota de unidades</label><input id="unitData" placeholder="Ej.: mi, lb·in, ft, in³/s">
+<div class="actions"><button class="secondary" id="loadTable">Aplicar datos editados</button><button class="plain" id="useFunction">Usar función matemática</button><button class="plain" id="useData">Usar datos tabulados</button></div>
+<p id="validation" class="small muted">Modifica los datos y pulsa “Calcular y explicar”.</p>
+</section>
+<section class="card">
+<h2>Resultados numéricos</h2>
+<div id="metrics" class="result-grid"></div>
+<div id="summary"></div>
+</section>
+<section class="card">
+<h2>Resultado exacto o valor de referencia</h2>
+<div id="exactResult"></div>
+<p class="small muted">Una integral calculada con datos tabulados no siempre tiene un valor exacto único. En esos casos se indica el resultado exacto del modelo interpolado o se aclara que solo existe una referencia. No se debe confundir una aproximación numérica con un valor exacto.</p>
+<div id="errorComparison"></div>
+</section>
+<section class="card">
+<h2>Gráfico de los datos y área aproximada</h2>
+<canvas id="chart" width="1000" height="380" aria-label="Gráfico de la función y área bajo la curva"></canvas>
+<p class="small muted">El gráfico conecta los puntos ingresados y sombrea el área respecto del eje horizontal. En curvas paramétricas, se grafica la rapidez integranda indicada en el modelo.</p>
+</section>
+<section class="card">
+<h2>Procedimiento explicado paso a paso</h2>
+<div id="steps"></div>
+</section>
+<section class="card">
+<h2>Tabla de cálculo y pesos</h2>
+<div id="tableArea"></div>
+</section>
+<section class="card">
+<h2>Referencia del solucionario del desafío</h2>
+<div id="reference"></div>
+</section>
+<section class="card">
+<h2>Prueba de verificación obligatoria del Word</h2>
+<p>Función de prueba: <span class="formula">f(x)=x²</span>, intervalo [0, 2]. El resultado exacto es <b>8/3 = 2.666667</b>. Se comparan n=4 y n=8.</p>
+<div class="actions"><button class="secondary" id="runVerification">Ejecutar prueba n=4 y n=8</button></div>
+<div id="verificationResult" class="small"></div>
+</section>
+</div>
+</div>
+<p class="footer">Aplicación autónoma: funciona en el navegador sin instalar programas ni conexión a internet. La precisión final depende de los datos ingresados y de la regla de integración utilizada.</p>
+</main>
+<script>
+const exercises = [
+{ id:19,title:"Distancia recorrida por un vehículo",desc:"La integral de la velocidad respecto al tiempo estima la distancia recorrida durante los primeros siete segundos. Los valores v(t) son los adaptados del documento del desafío.",model:"d = ∫₀⁷ v(t) dt / 3600 (la velocidad está en mi/h y el tiempo en segundos).",x:[0,1,2,3,4,5,6,7],y:[0,14,39,69,95,114,129,139],unit:"mi",ref:"Trapecio: 0.147083 mi · Simpson combinado: 0.147072 mi ≈ 236.69 m",exactResult:'El solucionario del Word no proporciona un valor físico exacto a partir de las mediciones discretas. Resultados de referencia: trapecio 0.147083 mi; Simpson combinado (1/3 en 4 subintervalos y 3/8 en 3) 0.147072 mi ≈236.69 m.',kind:"data",factor:1/3600,refValue:0.147072,refLabel:"referencia aproximada del Simpson combinado del Word"},
+{ id:20,title:"Trabajo de una banda elástica",desc:"El trabajo realizado por la fuerza se aproxima integrando F(x) respecto del desplazamiento.",model:"W = ∫₀²·⁸ F(x) dx. Con x en pulgadas y F en libras, el trabajo queda en lb·in.",x:[0,.4,.8,1.2,1.6,2,2.4,2.8],y:[0,.85,1.30,1.60,1.87,2.14,2.34,2.52],unit:"lb·in",ref:"Trapecio: 4.544000 lb·in · Simpson combinado: 4.577167 lb·in ≈ 0.517 J",exactResult:'El solucionario del Word no proporciona un valor físico exacto único para los datos tabulados. Resultados de referencia: trapecio 4.544000 lb·in; Simpson combinado (4 subintervalos con 1/3 y 3 con 3/8) 4.577167 lb·in ≈0.517 J.',kind:"data",refValue:4.577167,refLabel:"referencia aproximada del Simpson combinado del Word"},
+{ id:21,title:"Área de un perfil topográfico",desc:"Aproximar el área bajo el perfil usando coordenadas digitalizadas de la figura. Los valores son ilustrativos, no mediciones exactas.",model:"A ≈ ∫₁¹⁰ y(x) dx.",x:[1,2,3,4,5,6,7,8,9,10],y:[1.3,3.7,4.6,4.4,2.7,2.5,3.6,5.3,6,5.9],unit:"u²",ref:"Trapecio: ≈36.40 u² · Simpson 1/3 sobre 8 intervalos + trapecio: ≈36.85 u²",exactResult:'No se puede establecer un valor exacto fiable con los datos de esta aplicación, porque las alturas se cargaron como valores ilustrativos y no se digitalizaron de la figura original. Referencias aproximadas indicadas para el ejercicio: trapecio ≈36.40 u²; Simpson combinado ≈36.85 u².',kind:"data",refValue:36.85,refLabel:"referencia aproximada (datos digitalizados ilustrativos)"},
+{ id:22,title:"Longitud de una catenaria",desc:"Cable idealizado con y = a cosh(x/a), a = 24 ft, desde x = −12 ft hasta x = 26 ft. La integranda de longitud es √(1 + (y′)²).",model:"L = ∫₋₁₂²⁶ √(1 + sinh²(x/24)) dx = ∫ cosh(x/24) dx.",x:null,y:null,unit:"ft",ref:"Exacto: 43.898841 ft · Trapecio n=8: 44.042044 ft · Simpson 1/3 n=8: 43.899213 ft",exactResult:'L = 24[sinh(26/24) − sinh(−12/24)] = 43.898841 ft (aprox.).',kind:"function",fx:"Math.cosh(x/24)",a:-12,b:26,n:8,refValue:43.898841,refLabel:"valor analítico del Word"},
+{ id:23,title:"Caudal de una tubería circular",desc:"El caudal se obtiene integrando la velocidad sobre anillos concéntricos. Modelo adaptado del documento: R = 0.25 in y vmax = 80 in/s.",model:"Q = ∫₀ᴿ 2πr v(r) dr, con v(r)=80(1−r/R)^(1/7).",x:null,y:null,unit:"in³/s",ref:"Exacto: 49π/12 ≈ 12.828170 in³/s · Trapecio n=8: 11.681778 · Simpson 1/3 n=8: 12.151244",exactResult:'Q = 49π/12 = 12.828170 in³/s (aprox.), para R=0.25 in y vmax=80 in/s.',kind:"function",fx:"2*Math.PI*x*80*Math.pow(1-x/0.25,1/7)",a:0,b:.25,n:8,refValue:49*Math.PI/12,refLabel:"valor analítico 49π/12 del Word"},
+{ id:24,title:"Longitud de una cardioide",desc:"La longitud de la curva paramétrica se obtiene integrando la rapidez √((dx/dt)²+(dy/dt)²). Para b=5, la rapidez se simplifica a 20 sin(t/2) en [0,2π].",model:"L = ∫₀²π 20 sin(t/2) dt = 80.",x:null,y:null,unit:"unidades",ref:"Exacto: 80 · Trapecio n=8: 78.969264 · Simpson 1/3 n=8: 80.010767",exactResult:'L = ∫₀²π 20 sin(t/2) dt = [−40 cos(t/2)]₀²π = 80 unidades.',kind:"function",fx:"20*Math.sin(x/2)",a:0,b:2*Math.PI,n:8,refValue:80,refLabel:"valor exacto del Word"},
+{ id:25,title:"Variación de energía potencial",desc:"Integra la gravedad variable con la altitud para estimar la energía necesaria para elevar un satélite de 500 kg hasta 800 km.",model:"ΔU = m g₀ ∫₀ʰ R²/(R+y)² dy; m=500 kg, g₀=9.81 m/s², R=6 371 000 m, h=800 000 m.",x:null,y:null,unit:"J",ref:"Referencia analítica ≈ 3.486236787×10⁹ J · Trapecio n=8 ≈3.48662008×10⁹ · Simpson 1/3 ≈3.48623690×10⁹",exactResult:'ΔU = m g₀ R h/(R+h) = 3,486,236,787.059 J ≈ 3.486237×10⁹ J.',kind:"function",fx:"500*9.81*(6371000**2)/((6371000+x)**2)",a:0,b:800000,n:8,refValue:500*9.81*6371000*800000/(6371000+800000),refLabel:"valor analítico del Word"},
+{ id:26,title:"Área de la superficie del lago Erie",desc:"El área se aproxima integrando el ancho w(x) entre x=40 y x=260 millas, con mediciones cada 20 millas. La tabla debe obtenerse midiendo la figura del libro.",model:"A = ∫₄₀²⁶⁰ w(x) dx. Sin anchuras digitalizadas oficiales, no existe una única aproximación reproducible.",x:[40,60,80,100,120,140,160,180,200,220,240,260],y:[0,0,0,0,0,0,0,0,0,0,0,0],unit:"mi²",ref:"Área real de referencia del libro: 9,940 mi². Introduce las anchuras que midas en la figura; los ceros son marcadores, no datos del lago.",exactResult:'El Word da 9,940 mi² como área real de referencia. No es posible obtener una aproximación válida con la tabla inicial: las anchuras están en cero como marcadores y deben medirse en la figura original. El área de referencia no es el valor exacto de la integral construida con una tabla aún vacía.',kind:"data",refValue:9940,refLabel:"área real de referencia del libro (no integral exacta de la tabla)"},
+{ id:27,title:"Volumen y superficie de un objeto alargado",desc:"El diámetro medido a lo largo del eje permite estimar volumen. La expresión S=2π∫r dz del enunciado omite la pendiente y no es el área geométrica exacta de revolución.",model:"r=d/2; V=π∫₀¹² r² dz. Estimación simplificada del enunciado: S=2π∫₀¹² r dz.",x:[0,1,2,3,4,5,6,7,8,9,10,11,12],y:[0,2.6,3.2,4.8,5.6,6,6.2,6,5.6,4.8,3.3,2.6,0],unit:"in³ (volumen)",ref:"Volumen trapecio ≈199.404740 in³ · Simpson 1/3 ≈201.842092 in³. S simplificada: trapecio ≈159.278748 in²; Simpson ≈162.315620 in².",exactResult:'Con el radio interpolado linealmente entre cada par de mediciones, el volumen de ese modelo se integra por tramos como 196.674172 in³. La superficie simplificada S=2π∫r dz da 159.278748 in² para el mismo modelo. Estos valores son exactos para la interpolación lineal adoptada, no para el objeto físico real; el área real de revolución requiere incluir la pendiente mediante S=2π∫r√(1+(r′)²) dz.',kind:"data",special27:true,refValue:196.674172090233,refLabel:"valor exacto calculado para el modelo de radio lineal por tramos; no es el valor exacto del objeto real"}
+];
+let current=exercises[0],mode="data";
+const $=id=>document.getElementById(id);
+function fmt(v,d=6){if(!Number.isFinite(v))return "no definido";return v.toLocaleString("es-BO",{minimumFractionDigits:Math.min(d,6),maximumFractionDigits:d});}
+function parseList(s){return s.split(/[,;\s]+/).map(v=>v.trim()).filter(Boolean).map(Number)}
+function loadExercise(ex){
+ current=ex; mode=ex.kind;
+ document.querySelectorAll(".exercise-btn").forEach(b=>b.classList.toggle("active",Number(b.dataset.id)===ex.id));
+ $("tag").textContent="Ejercicio "+ex.id;$("title").textContent=ex.title;$("description").textContent=ex.desc;$("model").textContent=ex.model;
+ $("unitData").value=ex.unit||"";
+ $("functionInputs").classList.toggle("hidden",mode!=="function");
+ $("xs").value=ex.x?ex.x.join(", "):"";
+ $("ys").value=ex.y?ex.y.join(", "):"";
+ $("fx").value=ex.fx||"";$("a").value=ex.a??0;$("b").value=ex.b??1;$("n").value=ex.n||8;$("unit").value=ex.unit||"";
+ $("validation").textContent=mode==="data"?"Modo tabulado: puedes editar ambas listas; cada x debe corresponder a un y.":"Modo función: escribe una expresión JavaScript en x, por ejemplo x*x, Math.sin(x) o Math.exp(-x).";
+ $("reference").textContent=ex.ref;
+ renderExactResult(ex);
+ calculate();
+}
+function fEval(expr,x){
+ const fn=new Function("x","Math","return ("+expr+");");
+ const val=fn(x,Math); if(!Number.isFinite(val))throw new Error("La función no produce un número finito en x="+x);return val;
+}
+function simpson13(y,h,start=0,end=y.length-1){
+ let s=y[start]+y[end];for(let i=start+1;i<end;i++)s+=(i-start)%2===1?4*y[i]:2*y[i];
+ return h*s/3;
+}
+function simpson38(y,h,start=0,end=y.length-1){
+ let s=y[start]+y[end];for(let i=start+1;i<end;i++)s+=((i-start)%3===0?2:3)*y[i];return 3*h*s/8;
+}
+function trap(y,h,start=0,end=y.length-1){let s=(y[start]+y[end])/2;for(let i=start+1;i<end;i++)s+=y[i];return h*s}
+function calcMethods(x,y){
+ let n=x.length-1,h=x[1]-x[0],uniform=x.every((v,i)=>i===0||Math.abs((v-x[i-1])-h)<1e-7*Math.max(1,Math.abs(h)));
+ if(!uniform)throw new Error("Los valores de x no tienen espaciamiento uniforme. Usa intervalos iguales.");
+ let results={trap:trap(y,h),s13:null,s38:null,combo:null};
+ if(n%2===0)results.s13=simpson13(y,h);
+ if(n%3===0)results.s38=simpson38(y,h);
+ if(n===7){results.combo=simpson13(y,h,0,4)+simpson38(y,h,4,7)}
+ else if(n%2===0)results.combo=results.s13;
+ else if(n%3===0)results.combo=results.s38;
+ else if(n>=5){let n13=n-3;if(n13>=2&&n13%2===0)results.combo=simpson13(y,h,0,n13)+simpson38(y,h,n13,n);else{let n38=n-(n%2===0?2:0);if(n38>=3&&n38%3===0)results.combo=simpson38(y,h,0,n38)+trap(y,h,n38,n)}}
+ return {n,h,uniform,results};
+}
+function calculate(){
+ try{
+ let x,y,scale=1,unit=$("unitData").value||current.unit||"unidades";
+ if(mode==="function"){
+  let a=Number($("a").value),b=Number($("b").value),n=Number($("n").value),expr=$("fx").value.trim();
+  if(!expr||!Number.isFinite(a)||!Number.isFinite(b)||b<=a||!Number.isInteger(n)||n<1)throw new Error("Revisa la función, los límites (b > a) y el número entero de subintervalos n.");
+  x=Array.from({length:n+1},(_,i)=>a+(b-a)*i/n);y=x.map(v=>fEval(expr,v));unit=$("unit").value||unit;
+ }else{
+  x=parseList($("xs").value);y=parseList($("ys").value);
+  if(x.length<2||x.length!==y.length)throw new Error("Ingresa al menos dos valores x y la misma cantidad de valores y.");
+  if([...x,...y].some(v=>!Number.isFinite(v)))throw new Error("Hay valores no numéricos en las listas.");
+  if(x.some((v,i)=>i>0&&v<=x[i-1]))throw new Error("Los valores x deben ser estrictamente crecientes.");
+ }
+ let raw=calcMethods(x,y),r=raw.results,integrandY=y,originalY=null;
+ if(mode==="data" && current.id===19){for(let k of Object.keys(r))if(r[k]!==null)r[k]/=3600;}
+ if(mode==="data" && current.special27){
+  originalY=y.slice();
+  const radii=y.map(v=>v/2),volY=radii.map(v=>Math.PI*v*v),surfY=radii.map(v=>2*Math.PI*v);
+  raw=calcMethods(x,volY);r=raw.results;integrandY=volY;
+  window.extraSurface=calcMethods(x,surfY).results;
+ } else window.extraSurface=null;
+ if(mode==="data" && current.id===21 && raw.n===9)r.combo=simpson13(y,raw.h,0,8)+trap(y,raw.h,8,9);
+ window.last={x,y:integrandY,originalY,raw,r,unit,mode};
+ renderResults(window.last);drawChart(x,integrandY);renderSteps(window.last);renderTable(window.last);
+ $("validation").innerHTML='<span class="ok">Cálculo realizado.</span> n = '+raw.n+', h = '+fmt(raw.h,6)+'.';
+ }catch(e){window.last=null;window.extraSurface=null;$("metrics").innerHTML="";$("summary").innerHTML="";$("errorComparison").innerHTML="";$("validation").innerHTML='<span class="error">No se pudo calcular:</span> '+e.message;$("metrics").innerHTML="";$("steps").innerHTML="";$("tableArea").innerHTML="";clearChart();}
+}
+function renderExactResult(ex){
+ const target=$("exactResult");
+ if(!target)return;
+ target.innerHTML=`<div class="step"><b>Ejercicio ${ex.id}: ${ex.title}</b><br>${ex.exactResult||"El Word no proporciona un valor exacto analítico para este ejercicio."}</div>`;
+ $("errorComparison").innerHTML="";
+}
+function renderErrorComparison(o){
+ const target=$("errorComparison"), ex=current, r=o.r;
+ if(ex.id===26 && o.originalY===null && o.y.every(v=>v===0)){
+  target.innerHTML='<div class="step"><b>Error absoluto y porcentual</b><br>No se calculan todavía. Primero reemplaza los ceros por las anchuras medidas en la figura del lago Erie; el Word advierte que sin esa tabla no hay una aproximación reproducible.</div>';return;
+ }
+ if(ex.refValue===undefined || ex.refValue===null){target.innerHTML='<div class="step"><b>Error absoluto y porcentual</b><br>No se calculan: el Word no establece un valor exacto o de referencia único para este ejercicio. Las aproximaciones se comparan entre sí.</div>';return;}
+ const keys=[["trap","Trapecio compuesto"],["s13","Simpson 1/3"],["s38","Simpson 3/8"],["combo","Simpson combinado"]];
+ const rows=keys.filter(([k])=>r[k]!==null&&r[k]!==undefined).map(([k,name])=>{
+  const ea=Math.abs(ex.refValue-r[k]),ep=Math.abs(ex.refValue)>0?100*ea/Math.abs(ex.refValue):null;
+  return `<tr><td>${name}</td><td>${fmt(r[k],6)}</td><td>${fmt(ea,6)}</td><td>${ep===null?"No definido":fmt(ep,6)+" %"}</td></tr>`;
+ }).join("");
+ const caveat=ex.id===19||ex.id===20||ex.id===21||ex.id===26?`<p class="small muted">Nota: la referencia del Word para este ejercicio es ${ex.refLabel}; el porcentaje es una diferencia respecto de esa referencia, no necesariamente el error verdadero exacto.</p>`:`<p class="small muted">Referencia usada: ${fmt(ex.refValue,6)} ${o.unit}. ${ex.refLabel}. Eₐ=|Iref−Iaprox|; E%=100·Eₐ/|Iref|.</p>`;
+ target.innerHTML=`<div class="step"><b>Comparación con el valor de referencia del Word</b><div style="overflow-x:auto"><table><thead><tr><th>Método</th><th>Aproximación</th><th>Error absoluto</th><th>Error porcentual</th></tr></thead><tbody>${rows}</tbody></table></div>${caveat}</div>`;
+}
+function renderResults(o){
+ let {raw,r,unit}=o,keys=[["trap","Trapecio compuesto"],["s13","Simpson 1/3"],["s38","Simpson 3/8"],["combo","Simpson combinado"]];
+ let chosen=$("method").value;let show=chosen==="all"?keys:keys.filter(k=>k[0]===chosen);
+ if(chosen==="combo"&&r.combo===null)show=keys.filter(k=>k[0]==="combo");
+ $("metrics").innerHTML=show.map(([k,name])=>`<div class="metric"><div class="name">${name}</div><div class="val">${r[k]===null||r[k]===undefined?"No aplicable":fmt(r[k],Number($("digits").value))}</div><div class="small muted">${unit}</div></div>`).join("");
+ renderErrorComparison(o);
+ let notes=[];
+ if(r.s13===null)notes.push("Simpson 1/3 no se aplica al conjunto completo porque n no es par.");
+ if(r.s38===null)notes.push("Simpson 3/8 no se aplica al conjunto completo porque n no es múltiplo de 3.");
+ if(r.combo===null)notes.push("No se encontró una combinación válida para este n. Cambia n o usa trapecio.");
+ if(mode==="data" && current.id===19)notes.push("Conversión de unidades: la integral produce mi/h·s; se divide entre 3600 para obtener millas.");
+ if(mode==="data" && current.id===27)notes.push("Los resultados principales son para V=π∫r² dz. La referencia 196.674172 in³ es el valor exacto del modelo con radio lineal por tramos; no es una medición exacta del objeto físico. La superficie S=2π∫r dz es la versión simplificada del enunciado y omite la pendiente.");
+ if(mode==="data" && current.id===26)notes.push("Los ceros precargados son marcadores para que reemplaces las anchuras medidas en la figura; no representan el lago.");
+ $("summary").innerHTML=notes.map(n=>`<p class="small muted">• ${n}</p>`).join("");
+ if(mode==="data" && current.id===27&&window.extraSurface){$("summary").innerHTML+=`<p><b>Superficie simplificada S=2π∫r dz:</b> Trapecio ${fmt(window.extraSurface.trap,6)} in²; Simpson 1/3 ${window.extraSurface.s13===null?"no aplicable":fmt(window.extraSurface.s13,6)} in².</p>`;}
+}
+function renderSteps(o){
+ let {x,y,raw,r,unit}=o, n=raw.n,h=raw.h,d=Number($("digits").value),parts=[];
+ parts.push(`<div class="step"><b>Paso 1. Identificar qué representa la integral.</b><br>${current.model}<br>Los valores de entrada son ${x.length} nodos y ${n} subintervalos.</div>`);
+ parts.push(`<div class="step"><b>Paso 2. Calcular el ancho de cada subintervalo.</b><br><span class="formula">h = (b − a) / n = (${fmt(x[x.length-1],d)} − ${fmt(x[0],d)}) / ${n} = ${fmt(h,d)}</span>Como los nodos están igualmente espaciados, se puede aplicar la regla de integración correspondiente.</div>`);
+ let terms=y.map((v,i)=>`f${i}=${fmt(v,4)}`).join("; ");
+ const stepNote=(mode==="data" && current.special27 && o.originalY)?`<br>El Word entrega diámetros d. Primero se calcula r=d/2 y luego la integranda del volumen f(z)=πr². La tabla de entrada conserva los diámetros; los cálculos siguientes usan πr².`:"";
+ parts.push(`<div class="step"><b>Paso 3. Organizar los datos.</b>${stepNote}<br>${terms}</div>`);
+ let weightedTrap=y.map((v,i)=>({i,w:(i===0||i===n)?1:2,val:v*(i===0||i===n?1:2)}));
+ parts.push(`<div class="step"><b>Paso 4. Trapecio compuesto.</b><br><span class="formula">T = h[(f₀+fₙ)/2 + f₁ + f₂ + … + fₙ₋₁]</span><span class="formula">T = (${fmt(h,d)}/2) × [${y.map((v,i)=>i===0||i===n?fmt(v,4):"2×"+fmt(v,4)).join(" + ")}] = ${fmt(mode==="data" && current.id===19?r.trap*3600:raw.results.trap,d)}${current.id===19?" mi/h·s antes de convertir": " "+unit}</span>${mode==="data" && current.id===19?`Después: d = T/3600 = ${fmt(r.trap,d)} mi.`:"La suma ponderada multiplica por 1 los extremos y por 2 los nodos interiores antes de multiplicar por h/2."}</div>`);
+ if(r.s13!==null){
+  let odd=[],even=[];for(let i=1;i<n;i++)((i%2===1)?odd:even).push(y[i]);
+  parts.push(`<div class="step"><b>Paso 5. Simpson 1/3.</b><br><span class="formula">S₁/₃ = (h/3)[f₀ + fₙ + 4Σ fᵢ impares + 2Σ fᵢ pares interiores]</span><span class="formula">S₁/₃ = (${fmt(h,d)}/3)[${fmt(y[0],4)} + ${fmt(y[n],4)} + 4(${odd.map(v=>fmt(v,4)).join(" + ")}) + 2(${even.map(v=>fmt(v,4)).join(" + ")})] = ${fmt(mode==="data" && current.id===19?r.s13*3600:r.s13,d)}${mode==="data" && current.id===19?" mi/h·s antes de convertir":" "+unit}</span>${n%2===0?"Condición cumplida: n es par.":"No aplicable al conjunto completo: n debe ser par."}${mode==="data" && current.id===19?` Resultado convertido: ${fmt(r.s13,d)} mi.`:""}</div>`);
+ } else parts.push(`<div class="step"><b>Paso 5. Simpson 1/3.</b><br>No se aplica al conjunto completo: requiere un número par de subintervalos.</div>`);
+ if(r.s38!==null){
+  let mult3=[],other=[];for(let i=1;i<n;i++)((i%3===0)?mult3:other).push(y[i]);
+  parts.push(`<div class="step"><b>Paso 6. Simpson 3/8.</b><br><span class="formula">S₃/₈ = (3h/8)[f₀ + fₙ + 3Σ fᵢ (i no múltiplo de 3) + 2Σ fᵢ (i múltiplo de 3 interior)]</span><span class="formula">S₃/₈ = (3×${fmt(h,d)}/8)[${fmt(y[0],4)} + ${fmt(y[n],4)} + 3(${other.map(v=>fmt(v,4)).join(" + ")}) + 2(${mult3.map(v=>fmt(v,4)).join(" + ")})] = ${fmt(mode==="data" && current.id===19?r.s38*3600:r.s38,d)}${mode==="data" && current.id===19?" mi/h·s antes de convertir":" "+unit}</span>${n%3===0?"Condición cumplida: n es múltiplo de 3.":"No aplicable al conjunto completo: n debe ser múltiplo de 3."}${mode==="data" && current.id===19?` Resultado convertido: ${fmt(r.s38,d)} mi.`:""}</div>`);
+ } else parts.push(`<div class="step"><b>Paso 6. Simpson 3/8.</b><br>No se aplica al conjunto completo: requiere que n sea múltiplo de 3.</div>`);
+ if(r.combo!==null)parts.push(`<div class="step"><b>Paso 7. Método combinado.</b><br><span class="formula">${mode==="data" && current.id===21&&n===9?"Se aplica Simpson 1/3 en los primeros 8 subintervalos y la regla del trapecio en el último subintervalo, tal como indica el solucionario del Word.":n===7?"Se usa Simpson 1/3 en los primeros 4 subintervalos y Simpson 3/8 en los últimos 3.":n%2===0?"Se utiliza Simpson 1/3 en todo el intervalo.":n%3===0?"Se utiliza Simpson 3/8 en todo el intervalo.":"Se combinan segmentos compatibles."}</span>Resultado: <b>${fmt(r.combo,d)} ${unit}</b>. ${mode==="data" && current.id===19?"El valor ya está convertido de mi/h·s a mi.":"La suma de los segmentos aproxima la integral total."}</div>`);
+ parts.push(`<div class="step"><b>Conclusión e interpretación.</b><br>La aproximación principal seleccionada es <b>${$("method").value==="all"?"la comparación entre los métodos":$("method").selectedOptions[0].text}</b>. Recuerda conservar las unidades físicas y no presentar como exacto un resultado obtenido numéricamente. Si existe una referencia confiable, el error absoluto es |Iref − Iaprox| y el error porcentual es 100·Eₐ/|Iref|.</div>`);
+ $("steps").innerHTML=parts.join("");
+}
+function renderTable(o){
+ let {x,y,raw,unit}=o,n=raw.n,h=raw.h;
+ if(mode==="data" && current.special27 && o.originalY){
+  const rows=x.map((v,i)=>{const radius=o.originalY[i]/2,integrand=Math.PI*radius*radius;return `<tr><td>${i}</td><td>${fmt(v,6)}</td><td>${fmt(o.originalY[i],6)}</td><td>${fmt(radius,6)}</td><td>${fmt(integrand,6)}</td><td>${i===0||i===n?1:(i%2===1?4:2)}</td><td>${i===0||i===n?1:(i%3===0?2:3)}</td></tr>`;}).join("");
+  $("tableArea").innerHTML=`<p class="small muted">Datos del Word y transformación para el volumen: r=d/2; f(z)=πr². En trapecio los extremos tienen peso 1 e interiores peso 2; los pesos Simpson se usan solo cuando n cumple sus condiciones.</p><div style="overflow-x:auto"><table><thead><tr><th>i</th><th>zᵢ (in)</th><th>Diámetro d (in)</th><th>Radio r (in)</th><th>πr² (in²)</th><th>Peso Simpson 1/3*</th><th>Peso Simpson 3/8*</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">n=${n}, h=${fmt(h,6)} in. La integración de πr² dz produce volumen en in³.</p>`;
+  return;
+ }
+ let rows=x.map((v,i)=>`<tr><td>${i}</td><td>${fmt(v,6)}</td><td>${fmt(y[i],6)}</td><td>${i===0||i===n?1:(i%2===1?4:2)}</td><td>${i===0||i===n?1:(i%3===0?2:3)}</td></tr>`).join("");
+ $("tableArea").innerHTML=`<p class="small muted">Pesos habituales para las reglas de Simpson. En el trapecio compuesto los extremos tienen peso 1 y los nodos interiores peso 2.</p><div style="overflow-x:auto"><table><thead><tr><th>i</th><th>xᵢ</th><th>f(xᵢ)</th><th>Peso Simpson 1/3*</th><th>Peso Simpson 3/8*</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">* Los pesos se muestran como guía; cada método solo es válido si se cumple su condición sobre n. n=${n}, h=${fmt(h,6)}.</p>`;
+}
+function clearChart(){let c=$("chart"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height)}
+function drawChart(x,y){
+ let c=$("chart"),ctx=c.getContext("2d"),W=c.width,H=c.height;ctx.clearRect(0,0,W,H);
+ const pad={l:65,r:25,t:25,b:50},xmin=Math.min(...x),xmax=Math.max(...x),ymin=Math.min(0,...y),ymax=Math.max(...y);
+ const yrange=(ymax-ymin)||1,xrange=(xmax-xmin)||1;
+ const X=v=>pad.l+(v-xmin)/xrange*(W-pad.l-pad.r),Y=v=>H-pad.b-(v-ymin)/yrange*(H-pad.t-pad.b);
+ ctx.strokeStyle="#e6ebf3";ctx.lineWidth=1;ctx.fillStyle="#526176";ctx.font="13px system-ui";
+ for(let i=0;i<=5;i++){let yy=pad.t+i*(H-pad.t-pad.b)/5,val=ymax-i*yrange/5;ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(W-pad.r,yy);ctx.stroke();ctx.fillText(Number(val.toPrecision(4)).toString(),8,yy+4)}
+ for(let i=0;i<=5;i++){let xx=pad.l+i*(W-pad.l-pad.r)/5,val=xmin+i*xrange/5;ctx.beginPath();ctx.moveTo(xx,pad.t);ctx.lineTo(xx,H-pad.b);ctx.stroke();ctx.fillText(Number(val.toPrecision(4)).toString(),xx-12,H-pad.b+22)}
+ ctx.fillStyle="#dbe7ff";ctx.beginPath();ctx.moveTo(X(x[0]),Y(0));x.forEach((v,i)=>ctx.lineTo(X(v),Y(y[i])));ctx.lineTo(X(x[x.length-1]),Y(0));ctx.closePath();ctx.fill();
+ ctx.strokeStyle="#2457d6";ctx.lineWidth=3;ctx.beginPath();x.forEach((v,i)=>i?ctx.lineTo(X(v),Y(y[i])):ctx.moveTo(X(v),Y(y[i])));ctx.stroke();
+ ctx.fillStyle="#173e9e";x.forEach((v,i)=>{ctx.beginPath();ctx.arc(X(v),Y(y[i]),4,0,Math.PI*2);ctx.fill()});
+ ctx.fillStyle="#172033";ctx.font="bold 14px system-ui";ctx.fillText("x",W/2,H-8);ctx.save();ctx.translate(18,H/2);ctx.rotate(-Math.PI/2);ctx.fillText("f(x)",0,0);ctx.restore();
+}
+$("exerciseList").innerHTML=exercises.map(e=>`<button class="exercise-btn" data-id="${e.id}">${e.id}. ${e.title}</button>`).join("");
+document.querySelectorAll(".exercise-btn").forEach(b=>b.addEventListener("click",()=>loadExercise(exercises.find(e=>e.id===Number(b.dataset.id)))));
+$("calculate").addEventListener("click",calculate);$("loadTable").addEventListener("click",calculate);
+$("reset").addEventListener("click",()=>loadExercise(current));
+$("method").addEventListener("change",()=>{if(window.last)renderResults(window.last)});
+$("digits").addEventListener("change",()=>{if(window.last){renderResults(window.last);renderSteps(window.last)}});
+$("useFunction").addEventListener("click",()=>{mode="function";$("functionInputs").classList.remove("hidden");$("validation").textContent="Modo función activo. Escribe f(x), límites a y b, y el número de subintervalos n.";});
+$("useData").addEventListener("click",()=>{mode="data";$("functionInputs").classList.add("hidden");$("validation").textContent="Modo tabulado activo. Edita las listas x e y.";});
+$("runVerification").addEventListener("click",()=>{
+ const exact=8/3,rows=[];
+ for(const n of [4,8]){
+  const x=Array.from({length:n+1},(_,i)=>2*i/n),y=x.map(v=>v*v),h=2/n,calc=calcMethods(x,y).results;
+  for(const [key,name] of [["trap","Trapecio"],["s13","Simpson 1/3"],["s38","Simpson 3/8"]]){
+   if(calc[key]!==null)rows.push(`<tr><td>${n}</td><td>${name}</td><td>${fmt(calc[key],8)}</td><td>${fmt(Math.abs(exact-calc[key]),8)}</td></tr>`);
+  }
+ }
+ $("verificationResult").innerHTML=`<p>Integral exacta: ∫₀²x² dx = <b>8/3 = ${fmt(exact,8)}</b>.</p><div style="overflow-x:auto"><table><thead><tr><th>n</th><th>Método</th><th>Aproximación</th><th>Error absoluto</th></tr></thead><tbody>${rows.join("")}</tbody></table></div><p class="small muted">Esta prueba verifica el cálculo de las reglas. Simpson 1/3 integra exactamente un polinomio cuadrático, salvo redondeo.</p>`;
+});
+loadExercise(exercises[0]);
+</script>
+</body>
+</html>
